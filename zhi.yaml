@@ -11,7 +11,7 @@ store:
     addr: "https://127.0.0.1:8200"
     mount: "kv"
     prefix: "zhi"
-    workspace: "home-server"
+    ca_cert: /path/to/ca.crt # only needed for self-signed certs
 
 components:
   - name: core
@@ -53,28 +53,29 @@ export:
       output: ./docker-compose.yml
 
 apply:
-  default:
-    command: "docker compose up -d --remove-orphans"
-    workdir: "."
-    pre-export: true
-    env:
-      COMPOSE_PROJECT_NAME: "home-server"
-    timeout: 300
-  stop:
-    command: "docker compose down"
-    workdir: "."
-    env:
-      COMPOSE_PROJECT_NAME: "home-server"
-    timeout: 120
-  destroy:
-    command: "docker compose down -v"
-    workdir: "."
-    env:
-      COMPOSE_PROJECT_NAME: "home-server"
-    timeout: 120
-  restart:
-    command: "docker compose restart"
-    workdir: "."
-    env:
-      COMPOSE_PROJECT_NAME: "home-server"
-    timeout: 120
+  targets:
+    default:
+      command: "docker compose up -d --remove-orphans --force-recreate --wait"
+      workdir: "."
+      pre-export: true
+      env:
+        COMPOSE_PROJECT_NAME: "home-server"
+      timeout: 300
+    stop:
+      command: "docker compose down"
+      workdir: "."
+      env:
+        COMPOSE_PROJECT_NAME: "home-server"
+      timeout: 120
+    destroy:
+      command: "docker compose down -v"
+      workdir: "."
+      env:
+        COMPOSE_PROJECT_NAME: "home-server"
+      timeout: 120
+    restart:
+      command: "docker compose restart"
+      workdir: "."
+      env:
+        COMPOSE_PROJECT_NAME: "home-server"
+      timeout: 120
