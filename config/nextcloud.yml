@@ -1,0 +1,89 @@
+nextcloud:
+  image-tag:
+    val: "latest"
+    metadata:
+      ui.section: "Image"
+      ui.displayName: "Nextcloud Image Tag"
+      core.description: "Docker image tag for nextcloud"
+      core.type: string
+  web-port:
+    val: 8080
+    metadata:
+      ui.section: "Network"
+      ui.displayName: "Web Port"
+      core.description: "Host port for Nextcloud web interface"
+      core.type: int
+  admin-user:
+    val: "admin"
+    metadata:
+      ui.section: "Admin Account"
+      ui.displayName: "Admin Username"
+      core.description: "Nextcloud admin username (set during first run only)"
+      core.type: string
+  admin-password:
+    val: ""
+    metadata:
+      ui.section: "Admin Account"
+      ui.displayName: "Admin Password"
+      core.description: "Nextcloud admin password (set during first run only)"
+      core.type: string
+      ui.password: true
+      config.required: true
+    validation: |-
+      s, _ := v.Val.(string)
+      if s == "" {
+        return []config.ValidationResult{{Message: "Admin password is required", Severity: config.Blocking}}, nil
+      }
+      return nil, nil
+  trusted-domains:
+    val: "localhost"
+    metadata:
+      ui.section: "Security"
+      ui.displayName: "Trusted Domains"
+      core.description: "Space-separated list of trusted domains for Nextcloud"
+      core.type: string
+      ui.placeholder: "localhost cloud.home.example.com"
+  max-upload-size:
+    val: "16G"
+    metadata:
+      ui.section: "Uploads"
+      ui.displayName: "Max Upload Size"
+      core.description: "Maximum file upload size (e.g., 512M, 1G, 16G)"
+      core.type: string
+  redis-file-locking:
+    val: true
+    metadata:
+      ui.section: "Performance"
+      ui.displayName: "Redis File Locking"
+      core.description: "Use Redis for transactional file locking (recommended when Redis is available)"
+      core.type: bool
+  smtp-host:
+    val: ""
+    metadata:
+      ui.section: "Email (SMTP)"
+      ui.displayName: "SMTP Host"
+      core.description: "SMTP server hostname for sending emails"
+      core.type: string
+      ui.placeholder: "smtp.example.com"
+  smtp-port:
+    val: 587
+    metadata:
+      ui.section: "Email (SMTP)"
+      ui.displayName: "SMTP Port"
+      core.description: "SMTP server port"
+      core.type: int
+  smtp-user:
+    val: ""
+    metadata:
+      ui.section: "Email (SMTP)"
+      ui.displayName: "SMTP Username"
+      core.description: "SMTP authentication username"
+      core.type: string
+  smtp-password:
+    val: ""
+    metadata:
+      ui.section: "Email (SMTP)"
+      ui.displayName: "SMTP Password"
+      core.description: "SMTP authentication password"
+      core.type: string
+      ui.password: true

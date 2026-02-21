@@ -1,0 +1,167 @@
+networks:
+  frontend:
+  backend:
+
+volumes:
+{{- if .ComponentEnabled "mariadb" }}
+  mariadb-data:
+{{- end }}
+{{- if .ComponentEnabled "redis" }}
+  redis-data:
+{{- end }}
+{{- if .ComponentEnabled "nginx-proxy-manager" }}
+  npm-data:
+  npm-letsencrypt:
+{{- end }}
+{{- if .ComponentEnabled "pihole" }}
+  pihole-config:
+  pihole-dnsmasq:
+{{- end }}
+
+services:
+{{- if .ComponentEnabled "pihole" }}
+  pihole:
+    image: pihole/pihole:{{ .Get "pihole/image-tag" | default "latest" }}
+    container_name: pihole
+    restart: unless-stopped
+    ports:
+      - "{{ .Get "pihole/dns-port" | default "53" }}:53/tcp"
+      - "{{ .Get "pihole/dns-port" | default "53" }}:53/udp"
+      - "{{ .Get "pihole/web-port" | default "8053" }}:80/tcp"
+    environment:
+      TZ: {{ .Get "core/timezone" | default "UTC" | quote }}
+      WEBPASSWORD: {{ .Get "pihole/admin-password" | quote }}
+      PIHOLE_DNS_: {{ .Get "pihole/upstream-dns" | default "1.1.1.1;8.8.8.8" | quote }}
+      DNSSEC: {{ if eq (.Get "pihole/dnssec" | default "true") "true" }}"true"{{ else }}"false"{{ end }}
+    volumes:
+      - pihole-config:/etc/pihole
+      - pihole-dnsmasq:/etc/dnsmasq.d
+    networks:
+      - frontend
+{{- end }}
+
+{{- if .ComponentEnabled "plex" }}
+  plex:
+    image: linuxserver/plex:{{ .Get "plex/image-tag" | default "latest" }}
+    container_name: plex
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      TZ: {{ .Get "core/timezone" | default "UTC" | quote }}
+      PUID: {{ .Get "plex/puid" | default "1000" | quote }}
+      PGID: {{ .Get "plex/pgid" | default "1000" | quote }}
+      PLEX_CLAIM: {{ .Get "plex/claim-token" | quote }}
+      VERSION: "docker"
+    volumes:
+      - {{ .Get "core/data-root" | default "/srv/homeserver" }}/plex/config:/config
+      - {{ .Get "plex/media-movies" | default "/mnt/media/movies" }}:/data/movies
+      - {{ .Get "plex/media-tv" | default "/mnt/media/tv" }}:/data/tv
+      - {{ .Get "plex/media-music" | default "/mnt/media/music" }}:/data/music
+{{- if eq (.Get "plex/hardware-transcoding" | default "false") "true" }}
+    devices:
+      - /dev/dri:/dev/dri
+{{- end }}
+{{- end }}
+
+{{- if .ComponentEnabled "mariadb" }}
+  mariadb:
+    image: mariadb:{{ .Get "mariadb/image-tag" | default "11" }}
+    container_name: mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: {{ .Get "mariadb/root-password" | quote }}
+      MARIADB_DATABASE: {{ .Get "mariadb/nextcloud-db" | default "nextcloud" | quote }}
+      MARIADB_USER: {{ .Get "mariadb/nextcloud-user" | default "nextcloud" | quote }}
+      MARIADB_PASSWORD: {{ .Get "mariadb/nextcloud-password" | quote }}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    command: >-
+      --innodb-buffer-pool-size={{ .Get "mariadb/innodb-buffer-pool-size" | default "256M" }}
+      --transaction-isolation=READ-COMMITTED
+      --log-bin=binlog
+      --binlog-format=ROW
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+{{- end }}
+
+{{- if .ComponentEnabled "redis" }}
+  redis:
+    image: redis:{{ .Get "redis/image-tag" | default "7-alpine" }}
+    container_name: redis
+    restart: unless-stopped
+    command: >-
+      redis-server
+      --maxmemory {{ .Get "redis/maxmemory" | default "128mb" }}
+      --maxmemory-policy {{ .Get "redis/maxmemory-policy" | default "allkeys-lru" }}
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+{{- end }}
+
+{{- if .ComponentEnabled "nextcloud" }}
+  nextcloud:
+    image: nextcloud:{{ .Get "nextcloud/image-tag" | default "latest" }}
+    container_name: nextcloud
+    restart: unless-stopped
+    ports:
+      - "{{ .Get "nextcloud/web-port" | default "8080" }}:80"
+    environment:
+      TZ: {{ .Get "core/timezone" | default "UTC" | quote }}
+      MYSQL_HOST: mariadb
+      MYSQL_DATABASE: {{ .Get "mariadb/nextcloud-db" | default "nextcloud" | quote }}
+      MYSQL_USER: {{ .Get "mariadb/nextcloud-user" | default "nextcloud" | quote }}
+      MYSQL_PASSWORD: {{ .Get "mariadb/nextcloud-password" | quote }}
+      NEXTCLOUD_ADMIN_USER: {{ .Get "nextcloud/admin-user" | default "admin" | quote }}
+      NEXTCLOUD_ADMIN_PASSWORD: {{ .Get "nextcloud/admin-password" | quote }}
+      NEXTCLOUD_TRUSTED_DOMAINS: {{ .Get "nextcloud/trusted-domains" | default "localhost" | quote }}
+      REDIS_HOST: redis
+{{- if eq (.Get "nextcloud/redis-file-locking" | default "true") "true" }}
+      REDIS_HOST_PORT: "6379"
+{{- end }}
+      PHP_UPLOAD_LIMIT: {{ .Get "nextcloud/max-upload-size" | default "16G" | quote }}
+{{- if and (.Has "nextcloud/smtp-host") (ne (.Get "nextcloud/smtp-host") "") }}
+      SMTP_HOST: {{ .Get "nextcloud/smtp-host" | quote }}
+      SMTP_PORT: {{ .Get "nextcloud/smtp-port" | default "587" | quote }}
+      SMTP_NAME: {{ .Get "nextcloud/smtp-user" | quote }}
+      SMTP_PASSWORD: {{ .Get "nextcloud/smtp-password" | quote }}
+      SMTP_SECURE: "tls"
+      MAIL_FROM_ADDRESS: "nextcloud"
+{{- end }}
+    volumes:
+      - {{ .Get "core/data-root" | default "/srv/homeserver" }}/nextcloud:/var/www/html
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+{{- end }}
+
+{{- if .ComponentEnabled "nginx-proxy-manager" }}
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:{{ .Get "nginx-proxy-manager/image-tag" | default "latest" }}
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    ports:
+      - "{{ .Get "nginx-proxy-manager/http-port" | default "80" }}:80"
+      - "{{ .Get "nginx-proxy-manager/https-port" | default "443" }}:443"
+      - "{{ .Get "nginx-proxy-manager/admin-port" | default "81" }}:81"
+    volumes:
+      - npm-data:/data
+      - npm-letsencrypt:/etc/letsencrypt
+    networks:
+      - frontend
+{{- end }}

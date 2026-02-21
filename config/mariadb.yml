@@ -1,0 +1,60 @@
+mariadb:
+  image-tag:
+    val: "11"
+    metadata:
+      ui.section: "Image"
+      ui.displayName: "MariaDB Image Tag"
+      core.description: "Docker image tag for mariadb"
+      core.type: string
+  root-password:
+    val: ""
+    metadata:
+      ui.section: "Security"
+      ui.displayName: "Root Password"
+      core.description: "MariaDB root password (set during first run only)"
+      core.type: string
+      ui.password: true
+      config.required: true
+    validation: |-
+      s, _ := v.Val.(string)
+      if s == "" {
+        return []config.ValidationResult{{Message: "Root password is required", Severity: config.Blocking}}, nil
+      }
+      return nil, nil
+  nextcloud-db:
+    val: "nextcloud"
+    metadata:
+      ui.section: "Nextcloud Database"
+      ui.displayName: "Database Name"
+      core.description: "Database name for Nextcloud"
+      core.type: string
+  nextcloud-user:
+    val: "nextcloud"
+    metadata:
+      ui.section: "Nextcloud Database"
+      ui.displayName: "Database User"
+      core.description: "Database user for Nextcloud"
+      core.type: string
+  nextcloud-password:
+    val: ""
+    metadata:
+      ui.section: "Nextcloud Database"
+      ui.displayName: "Database Password"
+      core.description: "Database password for the Nextcloud user"
+      core.type: string
+      ui.password: true
+      config.required: true
+    validation: |-
+      s, _ := v.Val.(string)
+      if s == "" {
+        return []config.ValidationResult{{Message: "Nextcloud database password is required", Severity: config.Blocking}}, nil
+      }
+      return nil, nil
+  innodb-buffer-pool-size:
+    val: "256M"
+    metadata:
+      ui.section: "Tuning"
+      ui.displayName: "InnoDB Buffer Pool Size"
+      core.description: "InnoDB buffer pool size (e.g., 256M, 1G)"
+      core.type: string
+      ui.placeholder: "256M"

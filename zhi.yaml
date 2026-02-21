@@ -1,0 +1,80 @@
+version: "1"
+
+config:
+  provider: structuredfile
+  options:
+    directory: ./config
+
+store:
+  provider: vault-manager
+  options:
+    addr: "https://127.0.0.1:8200"
+    mount: "kv"
+    prefix: "zhi"
+    workspace: "home-server"
+
+components:
+  - name: core
+    description: "Shared settings (timezone, domain, data paths)"
+    paths: ["core/"]
+    mandatory: true
+
+  - name: pihole
+    description: "PiHole DNS ad-blocking"
+    paths: ["pihole/"]
+
+  - name: plex
+    description: "Plex Media Server"
+    paths: ["plex/"]
+
+  - name: nextcloud
+    description: "Nextcloud file sync and collaboration"
+    paths: ["nextcloud/"]
+    dependencies:
+      - mariadb
+      - redis
+
+  - name: mariadb
+    description: "MariaDB database (used by Nextcloud)"
+    paths: ["mariadb/"]
+
+  - name: redis
+    description: "Redis cache (used by Nextcloud)"
+    paths: ["redis/"]
+
+  - name: nginx-proxy-manager
+    description: "Nginx Proxy Manager reverse proxy with Let's Encrypt"
+    paths: ["nginx-proxy-manager/"]
+
+export:
+  templates:
+    - name: docker-compose
+      template: ./templates/docker-compose.yml.tmpl
+      output: ./docker-compose.yml
+
+apply:
+  default:
+    command: "docker compose up -d --remove-orphans"
+    workdir: "."
+    pre-export: true
+    env:
+      COMPOSE_PROJECT_NAME: "home-server"
+    timeout: 300
+  stop:
+    command: "docker compose down"
+    workdir: "."
+    env:
+      COMPOSE_PROJECT_NAME: "home-server"
+    timeout: 120
+  destroy:
+    command: "docker compose down -v"
+    workdir: "."
+    env:
+      COMPOSE_PROJECT_NAME: "home-server"
+    timeout: 120
+  restart:
+    command: "docker compose restart"
+    workdir: "."
+    env:
+      COMPOSE_PROJECT_NAME: "home-server"
+    timeout: 120

@@ -1,0 +1,46 @@
+core:
+  timezone:
+    val: "Europe/Berlin"
+    metadata:
+      ui.section: "General"
+      ui.displayName: "Timezone"
+      core.description: "System timezone for all containers (TZ database name)"
+      core.type: string
+      ui.placeholder: "Europe/Berlin"
+  domain:
+    val: ""
+    metadata:
+      ui.section: "General"
+      ui.displayName: "Base Domain"
+      core.description: "Base domain for service URLs (e.g., home.example.com)"
+      core.type: string
+      ui.placeholder: "home.example.com"
+      config.required: true
+    validation: |-
+      if v.Val == nil || v.Val.(string) == "" {
+        return []config.ValidationResult{{Message: "Base domain is required", Severity: config.Blocking}}, nil
+      }
+      return nil, nil
+  data-root:
+    val: "/srv/homeserver"
+    metadata:
+      ui.section: "Storage"
+      ui.displayName: "Data Root Path"
+      core.description: "Base directory for bind-mounted service data on the host"
+      core.type: string
+      ui.placeholder: "/srv/homeserver"
+    validation: |-
+      s, _ := v.Val.(string)
+      if !strings.HasPrefix(s, "/") {
+        return []config.ValidationResult{{Message: "Data root must be an absolute path", Severity: config.Blocking}}, nil
+      }
+      return nil, nil
+    imports:
+      - strings
+  compose-project-name:
+    val: "home-server"
+    metadata:
+      ui.section: "General"
+      ui.displayName: "Compose Project Name"
+      core.description: "Docker Compose project name (used for container/network naming)"
+      core.type: string

@@ -1,0 +1,23 @@
+name: home-server
+version: 0.1.0
+description: Home server Docker Compose deployment with PiHole, Plex, Nextcloud, and more.
+author: ""
+license: MIT
+dependencies:
+  - ref: oci://ghcr.io/mrwong99/zhi/zhi-store-vault:latest
+    type: store
+    optional: false
+  - ref: oci://ghcr.io/mrwong99/zhi/zhi-store-vault-manager:latest
+    type: store
+    optional: false
+tools:
+  - name: docker
+    version: "27.0"
+  - name: docker compose
+    version: "2.20"
+keywords:
+  - home-server
+  - docker-compose
+  - pihole
+  - plex
+  - nextcloud
