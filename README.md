@@ -2,6 +2,18 @@
 
 A [zhi](https://github.com/MrWong99/zhi) workspace that generates and manages a Docker Compose deployment for a self-hosted home server.
 
+## Repository Structure
+
+```
+zhi-home-server/
+├── plugin/     # zhi config plugin (Go) – provides defaults, metadata, and validation
+└── workspace/  # zhi workspace – component definitions, templates, and deploy targets
+```
+
+The **config plugin** (`plugin/`) is a Go binary that supplies default configuration values, UI metadata (display names, sections, placeholders), and validation rules for every service. It is published as an OCI artifact and referenced as a dependency by the workspace.
+
+The **workspace** (`workspace/`) ties everything together: it declares which components (services) exist, how they relate to each other, where secrets are stored (Vault), and how to export and deploy via Docker Compose.
+
 ## Services
 
 | Component | Service | Description |
@@ -18,21 +30,16 @@ A [zhi](https://github.com/MrWong99/zhi) workspace that generates and manages a 
 
 ## Prerequisites
 
-- [zhi CLI](https://github.com/MrWong99/zhi) (v1.1.3+)
+- [zhi CLI](https://github.com/MrWong99/zhi) (v1.5.3+)
 - Docker (27.0+) and Docker Compose (v2.20+)
 - HashiCorp Vault (running and accessible)
-- zhi Vault plugins installed:
-  ```sh
-  zhi plugin install oci://ghcr.io/mrwong99/zhi/zhi-store-vault:latest
-  zhi plugin install oci://ghcr.io/mrwong99/zhi/zhi-store-vault-manager:latest
-  ```
 
 ### Vault Bootstrap
 
 If you don't have Vault running, use the zhi vault workspace to set one up:
 
 ```sh
-zhi_version="1.1.3"
+zhi_version="1.5.3"
 zhi workspace install ghcr.io/mrwong99/zhi/zhi-workspace-vault:v${zhi_version} ./vault
 cd vault && zhi edit && cd ..
 # SAVE THE VAULT UNSEAL KEY(S) IN A SAFE PLACE
@@ -41,9 +48,9 @@ cd vault && zhi edit && cd ..
 ## Quick Start
 
 ```sh
-# Clone the repository
-git clone <repo-url> home-server
-cd home-server
+# Download the workspace and its dependencies
+zhi workspace install ghcr.io/mrwong99/zhi-home-server/zhi-workspace-home-server:latest ./zhi-home-server
+cd zhi-home-server/
 
 # Verify workspace loads
 zhi list components
@@ -63,6 +70,8 @@ zhi apply
 ```
 
 ## Common Operations
+
+All commands are run from the `zhi-home-server/` directory.
 
 ```sh
 # Open the interactive configuration editor
@@ -93,7 +102,7 @@ zhi component disable pihole
 
 ## Configuration
 
-Each service has a dedicated config file under `config/`. Configuration values are edited through `zhi edit` (interactive TUI) or by modifying the YAML files directly.
+Configuration values are defined by the config plugin and edited through `zhi edit` (interactive TUI, Web-UI or MCP server). The plugin provides defaults, display metadata, and validation for every value.
 
 ### Required Values
 
@@ -117,6 +126,29 @@ The following values must be set before deploying (enforced by blocking validati
 
 - **Bind mounts** under `${core/data-root}/<service>/` for user-accessible data (Plex config, Nextcloud files)
 - **Named Docker volumes** for internal state (MariaDB data, Redis data, NPM data, PiHole config)
+
+## Developing the Config Plugin
+
+The config plugin lives in `plugin/` and is a standalone Go module.
+
+```sh
+cd plugin
+
+# Run tests
+go test -race -count=1 ./...
+
+# Build locally
+go build -o zhi-config-homeserver .
+```
+
+The plugin implements the zhi `config.Plugin` gRPC interface:
+
+- **`List`** — returns all known config paths
+- **`Get`** — returns the default value and metadata for a path
+- **`Set`** — accepts updated values from the zhi runtime
+- **`Validate`** — runs path-specific validation (required fields, absolute paths, port conflicts)
+
+CI cross-compiles for linux/amd64, linux/arm64, darwin/amd64, darwin/arm64 and publishes to GHCR on each tagged release.
 
 ## Notes
 

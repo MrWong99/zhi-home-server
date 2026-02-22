@@ -1,0 +1,19 @@
+schemaVersion: "1"
+name: homeserver
+type: config
+version: 0.0.1
+zhiProtocolVersion: "1"
+description: Configuration plugin for the home server workspace providing defaults for PiHole, Plex, Nextcloud, MariaDB, Redis, and Nginx Proxy Manager.
+author: MrWong99
+license: MIT
+homepage: https://github.com/MrWong99/zhi-home-server
+keywords:
+  - config
+  - home-server
+  - docker-compose
+
+binaries:
+  linux/amd64: dist/zhi-config-homeserver_linux_amd64
+  linux/arm64: dist/zhi-config-homeserver_linux_arm64
+  darwin/amd64: dist/zhi-config-homeserver_darwin_amd64
+  darwin/arm64: dist/zhi-config-homeserver_darwin_arm64
