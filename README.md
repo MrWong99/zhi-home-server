@@ -30,7 +30,7 @@ The **workspace** (`workspace/`) ties everything together: it declares which com
 
 ## Prerequisites
 
-- [zhi CLI](https://github.com/MrWong99/zhi) (v1.5.3+)
+- [zhi CLI](https://github.com/MrWong99/zhi) (v1.5.3+) `CGO_ENABLED=0 go install github.com/MrWong99/zhi/cmd/zhi@latest`
 - Docker (27.0+) and Docker Compose (v2.20+)
 - HashiCorp Vault (running and accessible)
 
@@ -52,6 +52,9 @@ cd vault && zhi edit && cd ..
 zhi workspace install ghcr.io/mrwong99/zhi-home-server/zhi-workspace-home-server:latest ./zhi-home-server
 cd zhi-home-server/
 
+# Configure interactively (tui and mcp-sse or mcp-stdio also possible)
+zhi edit --ui webui
+
 # Verify workspace loads
 zhi list components
 zhi list paths
@@ -61,9 +64,6 @@ zhi component enable pihole
 zhi component enable nextcloud   # auto-enables mariadb + redis
 zhi component enable plex
 zhi component enable nginx-proxy-manager
-
-# Configure interactively
-zhi edit
 
 # Or deploy directly (export + docker compose up)
 zhi apply
