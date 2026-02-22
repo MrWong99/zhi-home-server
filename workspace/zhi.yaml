@@ -1,9 +1,7 @@
 version: "1"
 
 config:
-  provider: structuredfile
-  options:
-    directory: ./config
+  provider: homeserver
 
 store:
   provider: vault-manager

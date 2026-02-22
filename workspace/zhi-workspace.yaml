@@ -1,9 +1,12 @@
 name: home-server
 version: 0.1.0
 description: Home server Docker Compose deployment with PiHole, Plex, Nextcloud, and more.
-author: ""
+author: MrWong99
 license: MIT
 dependencies:
+  - ref: oci://ghcr.io/mrwong99/zhi-home-server/zhi-config-homeserver:latest
+    type: config
+    optional: false
   - ref: oci://ghcr.io/mrwong99/zhi/zhi-store-vault:latest
     type: store
     optional: false
