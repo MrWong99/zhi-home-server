@@ -48,15 +48,16 @@ export:
     - name: docker-compose
       template: ./templates/docker-compose.yml.tmpl
       output: ./docker-compose.yml
+    - name: apply-script
+      template: ./templates/apply.sh.tmpl
+      output: ./apply.sh
 
 apply:
   targets:
     default:
-      command: "docker compose up -d --remove-orphans --force-recreate --wait"
+      command: "bash ./apply.sh"
       workdir: "."
       pre-export: true
-      env:
-        COMPOSE_PROJECT_NAME: "home-server"
       timeout: 300
     stop:
       command: "docker compose down"
