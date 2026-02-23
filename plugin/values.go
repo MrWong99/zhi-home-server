@@ -63,7 +63,7 @@ var valueDefs = []ValueDef{
 	{
 		Path: "pihole/upstream-dns", Default: "1.1.1.1;8.8.8.8",
 		Section: "DNS", DisplayName: "Upstream DNS Servers",
-		Description: "Semicolon-separated upstream DNS servers",
+		Description: "Semicolon-separated upstream DNS servers (passed to PiHole v6 FTLCONF_dns_upstreams)",
 		Type:        "string", Placeholder: "1.1.1.1;8.8.8.8",
 	},
 	{
