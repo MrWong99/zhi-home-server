@@ -51,6 +51,9 @@ export:
     - name: apply-script
       template: ./templates/apply.sh.tmpl
       output: ./apply.sh
+    - name: backup-script
+      template: ./templates/backup.sh.tmpl
+      output: ./backup.sh
 
 apply:
   targets:
@@ -65,6 +68,11 @@ apply:
       env:
         COMPOSE_PROJECT_NAME: "home-server"
       timeout: 120
+    backup:
+      command: "bash ./backup.sh"
+      workdir: "."
+      pre-export: true
+      timeout: 3600
     destroy:
       command: "docker compose down -v"
       workdir: "."
