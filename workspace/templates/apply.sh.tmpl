@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+COMPOSE_PROJECT="{{ .Get "core/compose-project-name" | default "home-server" }}"
+DOMAIN="{{ .Get "core/domain" }}"
+NC_PORT="{{ .Get "nextcloud/web-port" | default "8080" }}"
+
+echo "==> Starting home-server stack..."
+docker compose -p "$COMPOSE_PROJECT" up -d --wait
+
+{{- if .ComponentEnabled "nextcloud" }}
+
+echo "==> Configuring Nextcloud overwrite settings..."
+# Wait for Nextcloud to be ready (first install can take a while)
+for i in $(seq 1 60); do
+  if docker exec nextcloud php occ status --output=json 2>/dev/null | grep -q '"installed":true'; then
+    break
+  fi
+  echo "    Waiting for Nextcloud to finish installation... ($i/60)"
+  sleep 5
+done
+
+docker exec -u www-data nextcloud php occ config:system:set trusted_domains 0 --value="$DOMAIN"
+docker exec -u www-data nextcloud php occ config:system:set trusted_domains 1 --value="localhost"
+{{- if ne $NC_PORT "80" }}
+docker exec -u www-data nextcloud php occ config:system:set overwritehost --value="$DOMAIN:$NC_PORT"
+docker exec -u www-data nextcloud php occ config:system:set overwrite.cli.url --value="http://$DOMAIN:$NC_PORT"
+{{- else }}
+docker exec -u www-data nextcloud php occ config:system:set overwritehost --value="$DOMAIN"
+docker exec -u www-data nextcloud php occ config:system:set overwrite.cli.url --value="http://$DOMAIN"
+{{- end }}
+echo "    Nextcloud configured for $DOMAIN"
+{{- end }}
+
+echo "==> Done! Services:"
+docker compose -p "$COMPOSE_PROJECT" ps --format "table {{`{{.Name}}`}}\t{{`{{.Status}}`}}\t{{`{{.Ports}}`}}"
