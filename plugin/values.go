@@ -235,6 +235,12 @@ var valueDefs = []ValueDef{
 		Type:        "string", Password: true, Required: true,
 	},
 	{
+		Path: "mariadb/enable-binlog", Default: false,
+		Section: "Replication", DisplayName: "Enable Binary Logging",
+		Description: "Enable binary logging for replication. Disabled by default to save disk space on home servers.",
+		Type:        "bool",
+	},
+	{
 		Path: "mariadb/innodb-buffer-pool-size", Default: "256M",
 		Section: "Tuning", DisplayName: "InnoDB Buffer Pool Size",
 		Description: "InnoDB buffer pool size (e.g., 256M, 1G)",
@@ -243,7 +249,7 @@ var valueDefs = []ValueDef{
 
 	// ── redis ─────────────────────────────────────────────────────────────
 	{
-		Path: "redis/image-tag", Default: "7-alpine",
+		Path: "redis/image-tag", Default: "8-alpine",
 		Section: "Image", DisplayName: "Redis Image Tag",
 		Description: "Docker image tag for redis",
 		Type:        "string",
