@@ -30,9 +30,9 @@ services:
       - "{{ .Get "pihole/web-port" | default "8053" }}:80/tcp"
     environment:
       TZ: {{ .Get "core/timezone" | default "UTC" | quote }}
-      WEBPASSWORD: {{ .Get "pihole/admin-password" | quote }}
-      PIHOLE_DNS_: {{ .Get "pihole/upstream-dns" | default "1.1.1.1;8.8.8.8" | quote }}
-      DNSSEC: {{ if eq (.Get "pihole/dnssec" | default "true") "true" }}"true"{{ else }}"false"{{ end }}
+      FTLCONF_webserver_api_password: {{ .Get "pihole/admin-password" | quote }}
+      FTLCONF_dns_upstreams: {{ .Get "pihole/upstream-dns" | default "1.1.1.1;8.8.8.8" | quote }}
+      FTLCONF_dns_dnssec: {{ if eq (.Get "pihole/dnssec" | default "true") "true" }}"true"{{ else }}"false"{{ end }}
     volumes:
       - pihole-config:/etc/pihole
       - pihole-dnsmasq:/etc/dnsmasq.d

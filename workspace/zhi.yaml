@@ -6,10 +6,9 @@ config:
 store:
   provider: vault-manager
   options:
-    addr: "https://127.0.0.1:8200"
+    addr: "http://127.0.0.1:8200"
     mount: "kv"
     prefix: "zhi"
-    ca_cert: /path/to/ca.crt # only needed for self-signed certs
 
 components:
   - name: core
