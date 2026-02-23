@@ -29,6 +29,18 @@ var valueDefs = []ValueDef{
 		Type:        "string", Placeholder: "/srv/homeserver",
 	},
 	{
+		Path: "core/backup-dir", Default: "/srv/backups/homeserver",
+		Section: "Backups", DisplayName: "Backup Directory",
+		Description: "Directory to store backup archives",
+		Type:        "string", Placeholder: "/srv/backups/homeserver",
+	},
+	{
+		Path: "core/backup-retain-days", Default: 7,
+		Section: "Backups", DisplayName: "Backup Retention (days)",
+		Description: "Number of days to keep old backups before automatic cleanup",
+		Type:        "int",
+	},
+	{
 		Path: "core/compose-project-name", Default: "home-server",
 		Section: "General", DisplayName: "Compose Project Name",
 		Description: "Docker Compose project name (used for container/network naming)",
