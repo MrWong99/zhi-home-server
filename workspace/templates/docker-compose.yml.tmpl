@@ -38,6 +38,12 @@ services:
       - pihole-dnsmasq:/etc/dnsmasq.d
     networks:
       - frontend
+    healthcheck:
+      test: ["CMD", "dig", "+norecurse", "+retry=0", "@127.0.0.1", "pi.hole"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 {{- end }}
 
 {{- if .ComponentEnabled "plex" }}
@@ -78,8 +84,10 @@ services:
     command: >-
       --innodb-buffer-pool-size={{ .Get "mariadb/innodb-buffer-pool-size" | default "256M" }}
       --transaction-isolation=READ-COMMITTED
+{{- if eq (.Get "mariadb/enable-binlog" | default "false") "true" }}
       --log-bin=binlog
       --binlog-format=ROW
+{{- end }}
     networks:
       - backend
     healthcheck:
@@ -91,7 +99,7 @@ services:
 
 {{- if .ComponentEnabled "redis" }}
   redis:
-    image: redis:{{ .Get "redis/image-tag" | default "7-alpine" }}
+    image: redis:{{ .Get "redis/image-tag" | default "8-alpine" }}
     container_name: redis
     restart: unless-stopped
     command: >-
@@ -148,6 +156,12 @@ services:
     networks:
       - frontend
       - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/status.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
 {{- end }}
 
 {{- if .ComponentEnabled "nginx-proxy-manager" }}
