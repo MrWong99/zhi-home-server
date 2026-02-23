@@ -86,7 +86,7 @@ func TestValidatePiholeDNSPort(t *testing.T) {
 		severity config.Severity
 		hasResult bool
 	}{
-		{"port 53 warns", 53, config.Warning, true},
+		{"port 53 blocks", 53, config.Blocking, true},
 		{"port 5353 passes", 5353, 0, false},
 		{"non-number blocks", "abc", config.Blocking, true},
 		{"float port passes", 8053.0, 0, false},
